@@ -1,0 +1,51 @@
+import { useEffect, useState } from "react";
+
+export default function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchUser = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await fetch(
+          `https://jsonplaceholder.typicode.com/users/${userId}`,
+          { signal: controller.signal }
+        );
+
+        if (!response.ok) throw new Error("Failed to load");
+
+        const data = await response.json();
+        setUser(data);
+      } catch (err) {
+        if (err.name !== "AbortError") setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+
+   
+    return () => controller.abort();
+
+  }, [userId]); 
+
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p>Error: {error}</p>;
+  if (!user) return null;
+
+  return (
+    <div style={{ border: "2px solid blue", padding: 10, margin: 10 }}>
+      <h2>{user.name}</h2>
+      <p>Email: {user.email}</p>
+      <p>Phone: {user.phone}</p>
+      <p>Website: {user.website}</p>
+    </div>
+  );
+}
